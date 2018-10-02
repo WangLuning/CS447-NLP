@@ -1,0 +1,11 @@
+.DS_Store
+.svn*
+obj/
+bin/
+*.suo
+*.user
+Log/
+log/
+*.db
+_pycache_/
+*.pyc
