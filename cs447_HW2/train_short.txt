@@ -1,0 +1,1 @@
+In_IN a_DT related_JJ move_NN ,_, Pierre_NNP Lortie_NNP ,_, chairman_NN and_CC chief_JJ executive_NN ,_, resigned_VBD ._. 
