@@ -6,31 +6,51 @@ import io
 import matplotlib.pyplot as plt
 
 ## create directory to store preprocessed data
-if(not os.path.isdir('../preprocessed_data')):
-	os.mkdir('../preprocessed_data')
+if(not os.path.isdir('../preprocessed_IMDB')):
+	os.mkdir('../preprocessed_IMDB')
 
-train_directory = ''
-pos_filenames = ['../rt-polarity.pos']
-neg_filenames = ['../rt-polarity.neg']
+## get all of the training reviews (including unlabeled reviews)
+train_directory = '../aclImdb/train/'
+pos_filenames = os.listdir(train_directory + 'pos/')
+neg_filenames = os.listdir(train_directory + 'neg/')
+unsup_filenames = os.listdir(train_directory + 'unsup/')
+pos_filenames = [train_directory+'pos/'+filename for filename in pos_filenames]
+neg_filenames = [train_directory+'neg/'+filename for filename in neg_filenames]
+
 filenames = pos_filenames + neg_filenames
-
+count = 0
 x_train = []
+for filename in filenames:
+	with io.open(filename,'r',encoding='utf-8') as f:
+		line = f.readlines()[0]
+	line = line.replace('<br />',' ')
+	line = line.replace('\x96',' ')
+	line = nltk.word_tokenize(line)
+	line = [w.lower() for w in line]
+	x_train.append(line)
+	count += 1
+	#print(count)
+
+## get all of the test reviews
+test_directory = '../aclImdb/test/'
+pos_filenames = os.listdir(test_directory + 'pos/')
+neg_filenames = os.listdir(test_directory + 'neg/')
+pos_filenames = [test_directory+'pos/'+filename for filename in pos_filenames]
+neg_filenames = [test_directory+'neg/'+filename for filename in neg_filenames]
+filenames = pos_filenames+neg_filenames
+
+count = 0
 x_test = []
 for filename in filenames:
-	count = 0
-	with io.open(filename,'r', encoding='utf-8', errors='ignore') as f:
-		line = f.readlines()
-	for item in line:
-		count += 1.0
-		item = item.replace('<br />',' ')
-		item = item.replace('\x96',' ')
-		item = nltk.word_tokenize(item)
-		item = [w.lower() for w in item]
-		if count < 3732:
-			x_train.append(item)
-		else:
-			x_test.append(item)
-	print(count) # both have 5331 files
+	with io.open(filename,'r',encoding='utf-8') as f:
+		line = f.readlines()[0]
+	line = line.replace('<br />',' ')
+	line = line.replace('\x96',' ')
+	line = nltk.word_tokenize(line)
+	line = [w.lower() for w in line]
+	x_test.append(line)
+	count += 1
+	#print(count)
 
 ## number of tokens per review
 no_of_tokens = []
@@ -56,8 +76,8 @@ indices = np.argsort(-count)
 id_to_word = id_to_word[indices]
 count = count[indices]
 
-hist, bins = np.histogram(count, bins=[1, 10, 100, 1000, 10000])
-bin = ['1 - 10', '10 - 100', '100 - 1000', '1000 - 10000']
+hist, bins = np.histogram(count, bins=[1, 10, 100, 1000, 10000, 100000])
+bin = ['1 - 10', '10 - 100', '100 - 1000', '1000 - 10000', '10000 - 100000']
 
 pos = np.arange(len(bin))
 width = 0.5     # gives histogram aspect to the bar diagram
@@ -82,16 +102,17 @@ x_train_token_ids = [[word_to_id.get(token,-1)+1 for token in x] for x in x_trai
 x_test_token_ids = [[word_to_id.get(token,-1)+1 for token in x] for x in x_test]
 
 ## save dictionary
-np.save('../preprocessed_data/review_dictionary.npy',np.asarray(id_to_word))
+np.save('../preprocessed_IMDB/review_dictionary.npy',np.asarray(id_to_word))
 ## save training data to single text file
-with io.open('../preprocessed_data/review_train.txt','w',encoding='utf-8') as f:
+with io.open('../preprocessed_IMDB/review_train.txt','w',encoding='utf-8') as f:
 	for tokens in x_train_token_ids:
 		for token in tokens:
 			f.write("%i " % token)
 		f.write("\n")
 ## save test data to single text file
-with io.open('../preprocessed_data/review_test.txt','w',encoding='utf-8') as f:
+with io.open('../preprocessed_IMDB/review_test.txt','w',encoding='utf-8') as f:
 	for tokens in x_test_token_ids:
 		for token in tokens:
 			f.write("%i " % token)
 		f.write("\n")
+

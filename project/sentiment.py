@@ -4,6 +4,7 @@ import math
 import nltk
 import spacy
 import en_core_web_sm
+from preprocess_IMDB import import_data
 from nltk.corpus import wordnet
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.stem.lancaster import LancasterStemmer
@@ -14,6 +15,10 @@ from collections import defaultdict
 # ----------------------------------------
 #  Data input 
 # ----------------------------------------
+
+# training it using a small polarity data or a large IMDB data
+__small__ = 0
+__large__ = 1
 
 class sentiment:
     def readFileToCorpus(self, f):
@@ -173,21 +178,30 @@ class sentiment:
 
 if __name__ == "__main__":
     sentimentReader = sentiment()
-    negLowerCaseCorpus = sentimentReader.readFileToCorpus('rt-polarity.neg')
-    posLowerCaseCorpus = sentimentReader.readFileToCorpus('rt-polarity.pos')
-    negTrain, negTest = train_test_split(negLowerCaseCorpus, test_size=0.3)
-    posTrain, posTest = train_test_split(posLowerCaseCorpus, test_size=0.3)
+    if __small__:
+        negLowerCaseCorpus = sentimentReader.readFileToCorpus('rt-polarity.neg')
+        posLowerCaseCorpus = sentimentReader.readFileToCorpus('rt-polarity.pos')
+        negTrain, negTest = train_test_split(negLowerCaseCorpus, test_size=0.3)
+        posTrain, posTest = train_test_split(posLowerCaseCorpus, test_size=0.3) 
+
+    if __large__:
+        negTrain, posTrain, negTest, posTest = import_data()
+        print("end of reading large file")  
 
     # need to eliminate from both pos word set and neg word set
     sentimentReader.train(negTrain, 0)
-    posNum, negNum, negFound, posFound = sentimentReader.test(negTest)
+    print(len(sentimentReader.negWordsOriginal))
+    posNum1, negNum1, negFound, posFound = sentimentReader.test(negTest)
     #print(negFound)
     #print(len(sentimentReader.negWords))
-    print("accuracy in negCorpus prediction: " + str(negNum / len(negTest)))
+    print("accuracy in negCorpus prediction: " + str(negNum1 / len(negTest)))
 
     sentimentReader.train(posTrain, 1)
-    posNum, negNum, negFound, posFound = sentimentReader.test(posTest)
+    print(len(sentimentReader.posWordsOriginal))
+    posNum2, negNum2, negFound, posFound = sentimentReader.test(posTest)
     #print(negFound)
     #print(len(sentimentReader.posWords))
-    print("accuracy in posCorpus prediction: " + str(posNum / len(posTest)))
+    print("accuracy in posCorpus prediction: " + str(posNum2 / len(posTest)))
+
+    print("total accuracy: " + str((posNum2 + negNum1) / (len(posTest) + len(negTest))))
 
